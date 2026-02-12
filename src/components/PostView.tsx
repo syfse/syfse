@@ -27,6 +27,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
   const [commentText, setCommentText] = useState('');
   const [replyText, setReplyText] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [isCommenting, setIsCommenting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { profile } = useAuth();
@@ -117,6 +118,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
         setReplyingTo(null);
       } else {
         setCommentText('');
+        setIsCommenting(false);
       }
       loadComments();
     } catch (err) {
@@ -262,26 +264,45 @@ export function PostView({ postId, onBack }: PostViewProps) {
           <span>{comments.length} comments</span>
         </div>
       </div>
-
-      {profile && (
-        <div className="mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
-          <form onSubmit={(e) => handleSubmitComment(e)}>
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="What are your thoughts?"
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none"
-              required
-            />
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
+      {profile && !replyingTo && (
+        <div className="mt-6">
+          {!isCommenting ? (
+             <button
+              onClick={() => setIsCommenting(true)}
+              className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
             >
-              {submitting ? 'Posting...' : 'Comment'}
+              Add a comment...
             </button>
-          </form>
+          ) : (
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md">
+              <form onSubmit={(e) => handleSubmitComment(e)}>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="What are your thoughts?"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none rounded-md"
+                  required
+                />
+                <div className="flex gap-2 mt-3">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors rounded-md"
+                  >
+                    {submitting ? 'Posting...' : 'Comment'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCommenting(false)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-md"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       )}
 
