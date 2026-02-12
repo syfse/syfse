@@ -8,6 +8,8 @@ import { PostsFeed } from './components/PostsFeed';
 import { PostView } from './components/PostView';
 import { CreatePost } from './components/CreatePost';
 import { UserProfile } from './components/UserProfile';
+import ShinyText from './components/ShinyText';
+import AnimatedContent from './components/AnimatedContent';
 
 type View =
   | { type: 'home' }
@@ -23,8 +25,18 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 animate-pulse">
+            <span className="text-white font-bold text-2xl">S</span>
+          </div>
+          <ShinyText 
+            text="Loading..."
+            color="#9ca3af"
+            shineColor="#22c55e"
+            speed={2}
+          />
+        </div>
       </div>
     );
   }
@@ -70,7 +82,12 @@ function App() {
     <Layout currentView={getCurrentViewName()} onNavigate={handleNavigate}>
       {view.type === 'home' && (
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6 tracking-tight">Home</h1>
+          <AnimatedContent distance={30} duration={0.5}>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">Home</h1>
+              <p className="text-gray-500">Discover the latest from your communities</p>
+            </div>
+          </AnimatedContent>
           <PostsFeed onSelectPost={(id) => setView({ type: 'post', id })} />
         </div>
       )}
