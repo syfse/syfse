@@ -117,9 +117,9 @@ export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
                 {post.title}
               </h2>
 
-              {post.image_url && (
+              {(post.assets?.[0] || post.image_url) && (
                 <div className="mb-3">
-                  <PostImage url={post.image_url} alt={post.title} className="w-full h-auto max-h-96 object-cover rounded-md" />
+                  <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-96 object-cover rounded-md" />
                 </div>
               )}
 

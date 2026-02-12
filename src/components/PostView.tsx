@@ -25,6 +25,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
+  const [replyText, setReplyText] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -95,7 +96,8 @@ export function PostView({ postId, onBack }: PostViewProps) {
 
   const handleSubmitComment = async (e: React.FormEvent, parentId: string | null = null) => {
     e.preventDefault();
-    if (!profile || !commentText.trim()) return;
+    const text = parentId ? replyText : commentText;
+    if (!profile || !text.trim()) return;
 
     setSubmitting(true);
     try {
@@ -104,14 +106,18 @@ export function PostView({ postId, onBack }: PostViewProps) {
         .insert({
           post_id: postId,
           author_id: profile.id,
-          content: commentText,
+          content: text,
           parent_id: parentId,
         });
 
       if (error) throw error;
 
-      setCommentText('');
-      setReplyingTo(null);
+      if (parentId) {
+        setReplyText('');
+        setReplyingTo(null);
+      } else {
+        setCommentText('');
+      }
       loadComments();
     } catch (err) {
       console.error('Error submitting comment:', err);
@@ -156,8 +162,8 @@ export function PostView({ postId, onBack }: PostViewProps) {
         {replyingTo === comment.id && (
           <form onSubmit={(e) => handleSubmitComment(e, comment.id)} className="mt-3">
             <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
               placeholder="Write a reply..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none text-sm"
@@ -175,7 +181,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
                 type="button"
                 onClick={() => {
                   setReplyingTo(null);
-                  setCommentText('');
+                  setReplyText('');
                 }}
                 className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
@@ -239,9 +245,9 @@ export function PostView({ postId, onBack }: PostViewProps) {
 
         <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
-        {post.image_url && (
+        {(post.assets?.[0] || post.image_url) && (
           <div className="mb-4">
-            <PostImage url={post.image_url} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
+            <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
           </div>
         )}
 
