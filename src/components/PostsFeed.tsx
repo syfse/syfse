@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { Avatar } from './Avatar';
+import { PostImage } from './PostImage';
 import type { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
-  author: { username: string | null } | null;
+  author: { username: string | null; avatar_url: string | null } | null;
   sub_syfse: { name: string } | null;
   comment_count?: number;
 };
@@ -28,7 +30,7 @@ export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
         .from('posts')
         .select(`
           *,
-          author:profiles!author_id(username),
+          author:profiles!author_id(username, avatar_url),
           sub_syfse:sub_syfses!sub_id(name)
         `)
         .order('created_at', { ascending: false });
@@ -91,14 +93,19 @@ export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
           onClick={() => onSelectPost(post.id)}
           className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors text-left"
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-4">
+            <div className="flex-col items-center gap-1 hidden sm:flex">
+              <Avatar url={post.author?.avatar_url || null} size={10} username={post.author?.username} />
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
                 <span className="font-medium text-green-600 dark:text-green-500">
                   s/{post.sub_syfse?.name}
                 </span>
                 <span>•</span>
-                <span>u/{post.author?.username || 'deleted'}</span>
+                <span className="flex items-center gap-1">
+                   u/{post.author?.username || 'deleted'}
+                </span>
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -109,6 +116,12 @@ export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
               <h2 className="font-semibold text-lg mb-2 line-clamp-2">
                 {post.title}
               </h2>
+
+              {post.image_url && (
+                <div className="mb-3">
+                  <PostImage url={post.image_url} alt={post.title} className="w-full h-auto max-h-96 object-cover rounded-md" />
+                </div>
+              )}
 
               {post.content && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { User, Calendar, MessageSquare } from 'lucide-react';
+import { User, Calendar, MessageSquare, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Avatar } from './Avatar';
+import { PostImage } from './PostImage';
 import type { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
@@ -14,11 +16,12 @@ type Comment = Database['public']['Tables']['comments']['Row'] & {
 };
 
 export function UserProfile() {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -97,6 +100,45 @@ export function UserProfile() {
     return date.toLocaleDateString();
   };
 
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile!.id}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('syfse-media')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: filePath })
+        .eq('id', profile!.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      await refreshProfile();
+    } catch (error) {
+      alert('Error uploading avatar!');
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!profile) {
     return null;
   }
@@ -105,8 +147,23 @@ export function UserProfile() {
     <div className="max-w-4xl mx-auto">
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6">
         <div className="flex items-start gap-4">
-          <div className="w-20 h-20 bg-green-600 flex items-center justify-center">
-            <User className="w-10 h-10 text-white" />
+          <div className="relative group">
+            <Avatar url={profile.avatar_url} size={20} username={profile.username} />
+            <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+              <Camera className="w-6 h-6 text-white" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={uploadAvatar}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            {uploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-1">u/{profile.username}</h1>
@@ -158,6 +215,11 @@ export function UserProfile() {
                     s/{post.sub_syfse?.name} • {formatTimeAgo(post.created_at)}
                   </div>
                   <h3 className="font-semibold mb-2">{post.title}</h3>
+                  {post.image_url && (
+                    <div className="mb-2">
+                      <PostImage url={post.image_url} alt={post.title} className="w-full h-48 object-cover rounded-md bg-gray-100 dark:bg-gray-800" />
+                    </div>
+                  )}
                   {post.content && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
                       {post.content}

@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Clock, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Avatar } from './Avatar';
+import { PostImage } from './PostImage';
 import type { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
-  author: { username: string | null } | null;
+  author: { username: string | null; avatar_url: string | null } | null;
   sub_syfse: { name: string } | null;
 };
 
 type Comment = Database['public']['Tables']['comments']['Row'] & {
-  author: { username: string | null } | null;
+  author: { username: string | null; avatar_url: string | null } | null;
   replies?: Comment[];
 };
 
@@ -39,7 +41,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
         .from('posts')
         .select(`
           *,
-          author:profiles!author_id(username),
+          author:profiles!author_id(username, avatar_url),
           sub_syfse:sub_syfses!sub_id(name)
         `)
         .eq('id', postId)
@@ -60,7 +62,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
         .from('comments')
         .select(`
           *,
-          author:profiles!author_id(username)
+          author:profiles!author_id(username, avatar_url)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
@@ -134,6 +136,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
     <div key={comment.id} className={depth > 0 ? 'ml-6 mt-3' : 'mt-4'}>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+          <Avatar url={comment.author?.avatar_url || null} size={6} username={comment.author?.username} />
           <span className="font-medium">u/{comment.author?.username || 'deleted'}</span>
           <span>•</span>
           <div className="flex items-center gap-1">
@@ -217,14 +220,16 @@ export function PostView({ postId, onBack }: PostViewProps) {
         <ArrowLeft className="w-4 h-4" />
         Back
       </button>
-
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
           <span className="font-medium text-green-600 dark:text-green-500">
             s/{post.sub_syfse?.name}
           </span>
           <span>•</span>
-          <span>u/{post.author?.username || 'deleted'}</span>
+          <div className="flex items-center gap-1">
+             <Avatar url={post.author?.avatar_url || null} size={6} username={post.author?.username} />
+             <span>u/{post.author?.username || 'deleted'}</span>
+          </div>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -233,6 +238,12 @@ export function PostView({ postId, onBack }: PostViewProps) {
         </div>
 
         <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+
+        {post.image_url && (
+          <div className="mb-4">
+            <PostImage url={post.image_url} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
+          </div>
+        )}
 
         {post.content && (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-4">

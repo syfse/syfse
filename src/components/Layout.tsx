@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Home, Users, Plus, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { Avatar } from './Avatar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -65,10 +66,15 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
 
             <button
               onClick={() => onNavigate('profile')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-2 p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-full"
               aria-label="Profile"
             >
-              <User className="w-4 h-4" />
+              <Avatar url={profile?.avatar_url || null} size={8} username={profile?.username} />
+              {profile?.username && (
+                <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300 pr-2">
+                  {profile.username}
+                </span>
+              )}
             </button>
 
             <button
@@ -78,12 +84,6 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             >
               <LogOut className="w-4 h-4" />
             </button>
-
-            {profile?.username && (
-              <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300">
-                {profile.username}
-              </span>
-            )}
           </div>
         </div>
       </header>

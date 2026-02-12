@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../lib/database.types';
@@ -16,6 +16,8 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -67,6 +69,20 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
     setSubmitting(true);
 
     try {
+      let image_url = null;
+      if (image) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('syfse-media')
+          .upload(filePath, image);
+
+        if (uploadError) throw uploadError;
+        image_url = filePath;
+      }
+
       const { error } = await supabase
         .from('posts')
         .insert({
@@ -74,6 +90,7 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
           sub_id: selectedCommunity,
           title,
           content: content || null,
+          assets: image_url ? [image_url] : [],
         });
 
       if (error) throw error;
@@ -83,6 +100,22 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
       setError(err instanceof Error ? err.message : 'Failed to create post');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
     }
   };
 
@@ -173,9 +206,84 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none"
                   placeholder="What's on your mind?"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Image (optional)</label>
+                {!imagePreview ? (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-auto max-h-96 object-contain rounded-lg border border-gray-200 dark:border-gray-800"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">
+                  Image (optional)
+                </label>
+                <div className="flex items-center gap-2">
+                  {imagePreview && (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-0 right-0 p-1 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                      >
+                        <X className="w-4 h-4 text-red-600" />
+                      </button>
+                    </div>
+                  )}
+                  <label
+                    htmlFor="image-upload"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
+                    <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {image ? 'Change Image' : 'Upload Image'}
+                    </span>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="sr-only"
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="flex gap-2">
