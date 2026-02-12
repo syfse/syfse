@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
+import { Vote } from './Vote';
 import type { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
@@ -30,6 +31,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
   const [isCommenting, setIsCommenting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [voteCount, setVoteCount] = useState(0);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -51,6 +53,17 @@ export function PostView({ postId, onBack }: PostViewProps) {
 
       if (error) throw error;
       setPost(data);
+
+      if (data) {
+        const { data: voteData } = await supabase
+          .from('users_votes')
+          .select('is_upvote')
+          .eq('post_id', postId);
+
+        const upvotes = (voteData as any[])?.filter((v: any) => v.is_upvote).length || 0;
+        const downvotes = (voteData as any[])?.filter((v: any) => !v.is_upvote).length || 0;
+        setVoteCount(upvotes - downvotes);
+      }
     } catch (err) {
       console.error('Error loading post:', err);
     } finally {
@@ -74,7 +87,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
       const commentMap = new Map<string, Comment>();
       const rootComments: Comment[] = [];
 
-      (data || []).forEach((comment) => {
+      (data as any[] || []).forEach((comment) => {
         commentMap.set(comment.id, { ...comment, replies: [] });
       });
 
@@ -102,8 +115,8 @@ export function PostView({ postId, onBack }: PostViewProps) {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('comments')
+      const { error } = await (supabase
+        .from('comments') as any)
         .insert({
           post_id: postId,
           author_id: profile.id,
@@ -229,39 +242,51 @@ export function PostView({ postId, onBack }: PostViewProps) {
         Back
       </button>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
-          <span className="font-medium text-green-600 dark:text-green-500">
-            s/{post.sub_syfse?.name}
-          </span>
-          <span>•</span>
-          <div className="flex items-center gap-1">
-             <Avatar url={post.author?.avatar_url || null} size={6} username={post.author?.username} />
-             <span>u/{post.author?.username || 'deleted'}</span>
+        <div className="flex items-start gap-4">
+          <div className="hidden sm:flex pt-1">
+            <Vote postId={postId} initialVoteCount={voteCount} />
           </div>
-          <span>•</span>
-          <div className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{formatTimeAgo(post.created_at)}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
+              <span className="font-medium text-green-600 dark:text-green-500">
+                s/{post.sub_syfse?.name}
+              </span>
+              <span>•</span>
+              <div className="flex items-center gap-1">
+                 <Avatar url={post.author?.avatar_url || null} size={6} username={post.author?.username} />
+                 <span>u/{post.author?.username || 'deleted'}</span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{formatTimeAgo(post.created_at)}</span>
+              </div>
+            </div>
+
+            <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+
+            {(post.assets?.[0] || post.image_url) && (
+              <div className="mb-4">
+                <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
+              </div>
+            )}
+
+            {post.content && (
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-4">
+                {post.content}
+              </p>
+            )}
+
+            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-800">
+              <div className="flex sm:hidden items-center bg-gray-50 dark:bg-gray-800 rounded-full pr-1">
+                <Vote postId={postId} initialVoteCount={voteCount} horizontal />
+              </div>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                <span>{comments.length} comments</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-
-        {(post.assets?.[0] || post.image_url) && (
-          <div className="mb-4">
-            <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
-          </div>
-        )}
-
-        {post.content && (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-4">
-            {post.content}
-          </p>
-        )}
-
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-800">
-          <MessageSquare className="w-4 h-4" />
-          <span>{comments.length} comments</span>
         </div>
       </div>
       {profile && !replyingTo && (
