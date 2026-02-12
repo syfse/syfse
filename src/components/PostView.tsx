@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, MessageSquare } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Clock, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
+import { Button, Card, Textarea, Loading, BackButton } from './ui';
+import { formatTimeAgo } from '../lib/utils';
 import type { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
@@ -16,12 +19,8 @@ type Comment = Database['public']['Tables']['comments']['Row'] & {
   replies?: Comment[];
 };
 
-interface PostViewProps {
-  postId: string;
-  onBack: () => void;
-}
-
-export function PostView({ postId, onBack }: PostViewProps) {
+export function PostView() {
+  const { id: postId } = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
@@ -33,8 +32,10 @@ export function PostView({ postId, onBack }: PostViewProps) {
   const { profile } = useAuth();
 
   useEffect(() => {
-    loadPost();
-    loadComments();
+    if (postId) {
+      loadPost();
+      loadComments();
+    }
   }, [postId]);
 
   const loadPost = async () => {
@@ -128,24 +129,14 @@ export function PostView({ postId, onBack }: PostViewProps) {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
-
   const renderComment = (comment: Comment, depth = 0) => (
     <div key={comment.id} className={depth > 0 ? 'ml-6 mt-3' : 'mt-4'}>
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
+      <Card className="p-4">
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
           <Avatar url={comment.author?.avatar_url || null} size={6} username={comment.author?.username} />
-          <span className="font-medium">u/{comment.author?.username || 'deleted'}</span>
+          <Link to={`/u/${comment.author?.username}`} className="font-medium hover:underline">
+            u/{comment.author?.username || 'deleted'}
+          </Link>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -163,80 +154,64 @@ export function PostView({ postId, onBack }: PostViewProps) {
         )}
         {replyingTo === comment.id && (
           <form onSubmit={(e) => handleSubmitComment(e, comment.id)} className="mt-3">
-            <textarea
+            <Textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Write a reply..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none text-sm"
               required
             />
             <div className="flex gap-2 mt-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
-              >
+              <Button type="submit" size="sm" disabled={submitting}>
                 {submitting ? 'Posting...' : 'Reply'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   setReplyingTo(null);
                   setReplyText('');
                 }}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
-      </div>
+      </Card>
       {comment.replies && comment.replies.map((reply) => renderComment(reply, depth + 1))}
     </div>
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500 dark:text-gray-400">Loading post...</div>
-      </div>
-    );
+    return <Loading message="Loading post..." />;
   }
 
   if (!post) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 dark:text-gray-400">Post not found</p>
-        <button
-          onClick={onBack}
-          className="mt-4 text-green-600 dark:text-green-500 hover:text-green-700 dark:hover:text-green-400 font-medium"
-        >
-          Go back
-        </button>
+        <BackButton to="/" className="mt-4 inline-flex" />
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
+      <BackButton to="/" />
+
+      <Card className="p-6">
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
-          <span className="font-medium text-green-600 dark:text-green-500">
+          <Link to={`/s/${post.sub_syfse?.name}`} className="font-medium text-green-600 dark:text-green-500 hover:underline">
             s/{post.sub_syfse?.name}
-          </span>
+          </Link>
           <span>•</span>
           <div className="flex items-center gap-1">
-             <Avatar url={post.author?.avatar_url || null} size={6} username={post.author?.username} />
-             <span>u/{post.author?.username || 'deleted'}</span>
+            <Avatar url={post.author?.avatar_url || null} size={6} username={post.author?.username} />
+            <Link to={`/u/${post.author?.username}`} className="hover:underline">
+              u/{post.author?.username || 'deleted'}
+            </Link>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1">
@@ -249,7 +224,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
 
         {(post.assets?.[0] || post.image_url) && (
           <div className="mb-4">
-            <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-[600px] object-contain rounded-md bg-gray-100 dark:bg-gray-900" />
+            <PostImage url={post.assets?.[0] || post.image_url!} alt={post.title} className="w-full h-auto max-h-[600px] object-contain bg-gray-100 dark:bg-gray-900" />
           </div>
         )}
 
@@ -263,45 +238,37 @@ export function PostView({ postId, onBack }: PostViewProps) {
           <MessageSquare className="w-4 h-4" />
           <span>{comments.length} comments</span>
         </div>
-      </div>
+      </Card>
+
       {profile && !replyingTo && (
         <div className="mt-6">
           {!isCommenting ? (
-             <button
+            <button
               onClick={() => setIsCommenting(true)}
-              className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               Add a comment...
             </button>
           ) : (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md">
+            <Card className="p-4">
               <form onSubmit={(e) => handleSubmitComment(e)}>
-                <textarea
+                <Textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="What are your thoughts?"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none rounded-md"
                   required
                 />
                 <div className="flex gap-2 mt-3">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors rounded-md"
-                  >
+                  <Button type="submit" disabled={submitting}>
                     {submitting ? 'Posting...' : 'Comment'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsCommenting(false)}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-md"
-                  >
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => setIsCommenting(false)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           )}
         </div>
       )}

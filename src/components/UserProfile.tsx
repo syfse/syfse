@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import { User, Calendar, MessageSquare, Camera } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Calendar, MessageSquare, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
+import { Card, Loading, EmptyState, BackButton } from './ui';
+import { formatTimeAgo, formatDate } from '../lib/utils';
 import type { Database } from '../lib/database.types';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 type Post = Database['public']['Tables']['posts']['Row'] & {
   sub_syfse: { name: string } | null;
@@ -12,8 +17,150 @@ type Post = Database['public']['Tables']['posts']['Row'] & {
 };
 
 type Comment = Database['public']['Tables']['comments']['Row'] & {
-  post: { title: string } | null;
+  post: { title: string; id: string } | null;
 };
+
+interface ProfileContentProps {
+  profile: Profile;
+  posts: Post[];
+  comments: Comment[];
+  loading: boolean;
+  activeTab: 'posts' | 'comments';
+  setActiveTab: (tab: 'posts' | 'comments') => void;
+  isOwnProfile?: boolean;
+  onAvatarUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading?: boolean;
+}
+
+function ProfileContent({
+  profile,
+  posts,
+  comments,
+  loading,
+  activeTab,
+  setActiveTab,
+  isOwnProfile = false,
+  onAvatarUpload,
+  uploading = false,
+}: ProfileContentProps) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <Card className="p-6 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="relative group">
+            <Avatar url={profile.avatar_url} size={20} username={profile.username} />
+            {isOwnProfile && onAvatarUpload && (
+              <>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <Camera className="w-6 h-6 text-white" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onAvatarUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin" />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold mb-1">u/{profile.username}</h1>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <Calendar className="w-4 h-4" />
+              <span>Joined {formatDate(profile.created_at)}</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="border-b border-gray-200 dark:border-gray-800 flex">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'posts'
+                ? 'text-green-600 dark:text-green-500 border-b-2 border-green-600 dark:border-green-500'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
+          >
+            Posts
+          </button>
+          <button
+            onClick={() => setActiveTab('comments')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'comments'
+                ? 'text-green-600 dark:text-green-500 border-b-2 border-green-600 dark:border-green-500'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
+          >
+            Comments
+          </button>
+        </div>
+
+        <div className="p-4">
+          {loading ? (
+            <Loading />
+          ) : activeTab === 'posts' ? (
+            <div className="space-y-3">
+              {posts.map((post) => (
+                <Link key={post.id} to={`/post/${post.id}`}>
+                  <Card interactive className="p-4">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      <Link 
+                        to={`/s/${post.sub_syfse?.name}`} 
+                        className="hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        s/{post.sub_syfse?.name}
+                      </Link>
+                      {' '}• {formatTimeAgo(post.created_at)}
+                    </div>
+                    <h3 className="font-semibold mb-2">{post.title}</h3>
+                    {post.image_url && (
+                      <div className="mb-2">
+                        <PostImage url={post.image_url} alt={post.title} className="w-full h-48 object-cover bg-gray-100 dark:bg-gray-800" />
+                      </div>
+                    )}
+                    {post.content && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {post.content}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <MessageSquare className="w-3 h-3" />
+                      <span>{post.comment_count} comments</span>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+              {posts.length === 0 && <EmptyState message="No posts yet" />}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {comments.map((comment) => (
+                <Link key={comment.id} to={`/post/${comment.post?.id}`}>
+                  <Card interactive className="p-4">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      on "{comment.post?.title}" • {formatTimeAgo(comment.created_at)}
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  </Card>
+                </Link>
+              ))}
+              {comments.length === 0 && <EmptyState message="No comments yet" />}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export function UserProfile() {
   const { profile, refreshProfile } = useAuth();
@@ -65,7 +212,7 @@ export function UserProfile() {
         .from('comments')
         .select(`
           *,
-          post:posts!post_id(title)
+          post:posts!post_id(title, id)
         `)
         .eq('author_id', profile.id)
         .order('created_at', { ascending: false })
@@ -78,26 +225,6 @@ export function UserProfile() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,121 +271,121 @@ export function UserProfile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6">
-        <div className="flex items-start gap-4">
-          <div className="relative group">
-            <Avatar url={profile.avatar_url} size={20} username={profile.username} />
-            <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-              <Camera className="w-6 h-6 text-white" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={uploadAvatar}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-1">u/{profile.username}</h1>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <Calendar className="w-4 h-4" />
-              <span>Joined {formatDate(profile.created_at)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <ProfileContent
+      profile={profile}
+      posts={posts}
+      comments={comments}
+      loading={loading}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      isOwnProfile={true}
+      onAvatarUpload={uploadAvatar}
+      uploading={uploading}
+    />
+  );
+}
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-        <div className="border-b border-gray-200 dark:border-gray-800 flex">
-          <button
-            onClick={() => setActiveTab('posts')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'posts'
-                ? 'text-green-600 dark:text-green-500 border-b-2 border-green-600 dark:border-green-500'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-            }`}
-          >
-            Posts
-          </button>
-          <button
-            onClick={() => setActiveTab('comments')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'comments'
-                ? 'text-green-600 dark:text-green-500 border-b-2 border-green-600 dark:border-green-500'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-            }`}
-          >
-            Comments
-          </button>
-        </div>
+export function PublicUserProfile() {
+  const { username } = useParams<{ username: string }>();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts');
 
-        <div className="p-4">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              Loading...
-            </div>
-          ) : activeTab === 'posts' ? (
-            <div className="space-y-3">
-              {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="border border-gray-200 dark:border-gray-800 p-4"
-                >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    s/{post.sub_syfse?.name} • {formatTimeAgo(post.created_at)}
-                  </div>
-                  <h3 className="font-semibold mb-2">{post.title}</h3>
-                  {post.image_url && (
-                    <div className="mb-2">
-                      <PostImage url={post.image_url} alt={post.title} className="w-full h-48 object-cover rounded-md bg-gray-100 dark:bg-gray-800" />
-                    </div>
-                  )}
-                  {post.content && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
-                      {post.content}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    <MessageSquare className="w-3 h-3" />
-                    <span>{post.comment_count} comments</span>
-                  </div>
-                </div>
-              ))}
-              {posts.length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No posts yet
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="border border-gray-200 dark:border-gray-800 p-4"
-                >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    on "{comment.post?.title}" • {formatTimeAgo(comment.created_at)}
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-                </div>
-              ))}
-              {comments.length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No comments yet
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+  useEffect(() => {
+    if (username) {
+      loadProfile();
+    }
+  }, [username]);
+
+  const loadProfile = async () => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profileData) {
+        setLoading(false);
+        return;
+      }
+
+      setProfile(profileData);
+
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          sub_syfse:sub_syfses!sub_id(name)
+        `)
+        .eq('author_id', profileData.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (postsError) throw postsError;
+
+      const postsWithCounts = await Promise.all(
+        (postsData || []).map(async (post) => {
+          const { count } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+
+          return {
+            ...post,
+            comment_count: count || 0,
+          };
+        })
+      );
+
+      setPosts(postsWithCounts);
+
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          post:posts!post_id(title, id)
+        `)
+        .eq('author_id', profileData.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (commentsError) throw commentsError;
+      setComments(commentsData || []);
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <Loading message="Loading profile..." />;
+  }
+
+  if (!profile) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 dark:text-gray-400">User not found</p>
+        <BackButton to="/" className="mt-4 inline-flex" />
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <BackButton to="/" />
+      <ProfileContent
+        profile={profile}
+        posts={posts}
+        comments={comments}
+        loading={false}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
+    </>
   );
 }

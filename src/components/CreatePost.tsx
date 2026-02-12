@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Image as ImageIcon, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Card, Input, Textarea, Select, Alert, Loading, BackButton } from './ui';
 import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'];
 
-interface CreatePostProps {
-  onBack: () => void;
-  onSuccess: () => void;
-}
-
-export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
+export function CreatePost() {
+  const navigate = useNavigate();
   const [communities, setCommunities] = useState<SubSyfse[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [title, setTitle] = useState('');
@@ -95,7 +93,7 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
 
       if (error) throw error;
 
-      onSuccess();
+      navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create post');
     } finally {
@@ -120,24 +118,14 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
+      <BackButton to="/" />
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
+      <Card className="p-6">
         <h1 className="text-2xl font-bold mb-6">Create a Post</h1>
 
         {communities.length === 0 ? (
@@ -145,76 +133,54 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               You need to join a community before you can create a post.
             </p>
-            <button
-              onClick={onBack}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
-            >
+            <Button onClick={() => navigate('/s')}>
               Browse Communities
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 text-sm">
-                {error}
-              </div>
-            )}
+            {error && <Alert className="mb-4">{error}</Alert>}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="community" className="block text-sm font-medium mb-1.5">
-                  Community
-                </label>
-                <select
-                  id="community"
-                  value={selectedCommunity}
-                  onChange={(e) => setSelectedCommunity(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select a community</option>
-                  {communities.map((community) => (
-                    <option key={community.id} value={community.id}>
-                      s/{community.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="community"
+                label="Community"
+                value={selectedCommunity}
+                onChange={(e) => setSelectedCommunity(e.target.value)}
+                required
+              >
+                <option value="">Select a community</option>
+                {communities.map((community) => (
+                  <option key={community.id} value={community.id}>
+                    s/{community.name}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-1.5">
-                  Title
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  required
-                  maxLength={300}
-                  placeholder="An interesting title"
-                />
-              </div>
+              <Input
+                id="title"
+                label="Title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                maxLength={300}
+                placeholder="An interesting title"
+              />
 
-              <div>
-                <label htmlFor="content" className="block text-sm font-medium mb-1.5">
-                  Content (optional)
-                </label>
-                <textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none"
-                  placeholder="What's on your mind?"
-                />
-              </div>
+              <Textarea
+                id="content"
+                label="Content (optional)"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={10}
+                placeholder="What's on your mind?"
+              />
 
               <div>
                 <label className="block text-sm font-medium mb-1.5">Image (optional)</label>
                 {!imagePreview ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -233,12 +199,12 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-auto max-h-96 object-contain rounded-lg border border-gray-200 dark:border-gray-800"
+                      className="w-full h-auto max-h-96 object-contain border border-gray-200 dark:border-gray-800"
                     />
                     <button
                       type="button"
                       onClick={removeImage}
-                      className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                      className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -246,28 +212,18 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
                 )}
               </div>
 
-
-
               <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-50 transition-colors"
-                >
+                <Button type="submit" size="lg" disabled={submitting}>
                   {submitting ? 'Posting...' : 'Post'}
-                </button>
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="px-6 py-2.5 border border-gray-300 dark:border-gray-700 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
+                </Button>
+                <Button type="button" variant="secondary" size="lg" onClick={() => navigate('/')}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

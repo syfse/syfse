@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Users } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PostsFeed } from './PostsFeed';
+import { Button, Card, Loading, BackButton } from './ui';
 import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
@@ -10,27 +12,24 @@ type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
   is_member?: boolean;
 };
 
-interface CommunityViewProps {
-  communityId: string;
-  onBack: () => void;
-  onSelectPost: (id: string) => void;
-}
-
-export function CommunityView({ communityId, onBack, onSelectPost }: CommunityViewProps) {
+export function CommunityView() {
+  const { name } = useParams<{ name: string }>();
   const [community, setCommunity] = useState<SubSyfse | null>(null);
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
 
   useEffect(() => {
-    loadCommunity();
-  }, [communityId, profile]);
+    if (name) {
+      loadCommunity();
+    }
+  }, [name, profile]);
 
   const loadCommunity = async () => {
     try {
       const { data, error } = await supabase
         .from('sub_syfses')
         .select('*')
-        .eq('id', communityId)
+        .eq('name', name)
         .maybeSingle();
 
       if (error) throw error;
@@ -102,38 +101,23 @@ export function CommunityView({ communityId, onBack, onSelectPost }: CommunityVi
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500 dark:text-gray-400">Loading community...</div>
-      </div>
-    );
+    return <Loading message="Loading community..." />;
   }
 
   if (!community) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 dark:text-gray-400">Community not found</p>
-        <button
-          onClick={onBack}
-          className="mt-4 text-green-600 dark:text-green-500 hover:text-green-700 dark:hover:text-green-400 font-medium"
-        >
-          Go back
-        </button>
+        <BackButton to="/s" className="mt-4 inline-flex" />
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
+      <BackButton to="/s" />
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <Card className="p-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -150,21 +134,17 @@ export function CommunityView({ communityId, onBack, onSelectPost }: CommunityVi
             </div>
           </div>
           {profile && (
-            <button
+            <Button
+              variant={community.is_member ? 'secondary' : 'primary'}
               onClick={community.is_member ? handleLeave : handleJoin}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                community.is_member
-                  ? 'border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
             >
               {community.is_member ? 'Leave' : 'Join'}
-            </button>
+            </Button>
           )}
         </div>
-      </div>
+      </Card>
 
-      <PostsFeed communityId={communityId} onSelectPost={onSelectPost} />
+      <PostsFeed communityId={community.id} />
     </div>
   );
 }

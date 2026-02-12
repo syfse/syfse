@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Card, Input, Textarea, Alert, Loading, EmptyState } from './ui';
 import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
@@ -9,11 +11,7 @@ type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
   is_member?: boolean;
 };
 
-interface CommunitiesListProps {
-  onSelectCommunity: (id: string) => void;
-}
-
-export function CommunitiesList({ onSelectCommunity }: CommunitiesListProps) {
+export function CommunitiesList() {
   const [communities, setCommunities] = useState<SubSyfse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -125,91 +123,56 @@ export function CommunitiesList({ onSelectCommunity }: CommunitiesListProps) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500 dark:text-gray-400">Loading communities...</div>
-      </div>
-    );
+    return <Loading message="Loading communities..." />;
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Communities</h1>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium flex items-center gap-2 transition-colors"
-        >
+        <Button onClick={() => setShowCreateForm(!showCreateForm)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Create Community
-        </button>
+        </Button>
       </div>
 
       {showCreateForm && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6">
+        <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Create a New Community</h2>
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 text-sm">
-              {error}
-            </div>
-          )}
+          {error && <Alert className="mb-4">{error}</Alert>}
           <form onSubmit={handleCreateCommunity} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1.5">
-                Community Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium mb-1.5">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent resize-none"
-              />
-            </div>
+            <Input
+              id="name"
+              label="Community Name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <Textarea
+              id="description"
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
             <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={creating}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
-              >
+              <Button type="submit" disabled={creating}>
                 {creating ? 'Creating...' : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowCreateForm(false)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       <div className="space-y-3">
         {communities.map((community) => (
-          <div
-            key={community.id}
-            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
-          >
+          <Card key={community.id} interactive className="p-5">
             <div className="flex items-start justify-between gap-4">
-              <button
-                onClick={() => onSelectCommunity(community.id)}
-                className="flex-1 text-left"
-              >
+              <Link to={`/s/${community.name}`} className="flex-1 text-left">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-5 h-5 text-green-600" />
                   <h3 className="font-semibold text-lg">s/{community.name}</h3>
@@ -219,31 +182,26 @@ export function CommunitiesList({ onSelectCommunity }: CommunitiesListProps) {
                     {community.description}
                   </p>
                 )}
-              </button>
+              </Link>
               {profile && (
-                <button
+                <Button
+                  variant={community.is_member ? 'secondary' : 'primary'}
+                  size="sm"
                   onClick={() =>
                     community.is_member
                       ? handleLeaveCommunity(community.id)
                       : handleJoinCommunity(community.id)
                   }
-                  className={`px-4 py-1.5 text-sm font-medium transition-colors ${
-                    community.is_member
-                      ? 'border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
                 >
                   {community.is_member ? 'Leave' : 'Join'}
-                </button>
+                </Button>
               )}
             </div>
-          </div>
+          </Card>
         ))}
 
         {communities.length === 0 && (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            No communities yet. Create the first one!
-          </div>
+          <EmptyState message="No communities yet. Create the first one!" />
         )}
       </div>
     </div>

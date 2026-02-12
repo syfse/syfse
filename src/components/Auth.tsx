@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn } from 'lucide-react';
+import { Button, Input, Card, Alert } from './ui';
 
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -41,7 +42,7 @@ export function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
       <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
+        <Card className="p-8 shadow-sm">
           <div className="flex items-center justify-center mb-8">
             <div className="w-12 h-12 bg-green-600 flex items-center justify-center">
               <LogIn className="w-6 h-6 text-white" />
@@ -53,65 +54,42 @@ export function Auth() {
             {isLogin ? 'Sign In' : 'Create Account'}
           </h2>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 text-sm">
-              {error}
-            </div>
-          )}
+          {error && <Alert className="mb-4">{error}</Alert>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium mb-1.5">
-                  Username
-                </label>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                  required={!isLogin}
-                />
-              </div>
+              <Input
+                id="username"
+                label="Username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required={!isLogin}
+              />
             )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                required
-              />
-            </div>
+            <Input
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1.5">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                required
-                minLength={6}
-              />
-            </div>
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-6 text-center">
@@ -122,7 +100,7 @@ export function Auth() {
               {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
             </button>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
