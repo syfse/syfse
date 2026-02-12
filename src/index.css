@@ -26,14 +26,6 @@
     @apply bg-white text-gray-900 font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
-
-  .dark {
-    @apply bg-gray-950 text-gray-50;
-  }
-
-  .dark * {
-    @apply border-gray-800;
-  }
 }
 
 @layer utilities {

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Home, Users, Plus, Moon, Sun, LogOut, User } from 'lucide-react';
+import { Home, Users, Plus, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -11,7 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const { profile, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  // const { theme, toggleTheme } = useTheme(); // Theme is now fixed to light
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -59,18 +59,6 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Create</span>
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-4 h-4" />
-              ) : (
-                <Sun className="w-4 h-4" />
-              )}
             </button>
 
             <div className="h-6 w-px bg-gray-200 dark:bg-gray-800" />
