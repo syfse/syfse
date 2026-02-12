@@ -28,16 +28,26 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Reference organization variables here
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          # Add any other env vars you need from org settings
       
-      - name: Deploy to dist repo
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Checkout dist repo
+        uses: actions/checkout@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          external_repository: syfse/syfse-dist
-          publish_dir: ./dist
-          publish_branch: main
-          force_orphan: true
+          repository: syfse/syfse-dist
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist-repo
+      
+      - name: Copy build files
+        run: |
+          rm -rf dist-repo/*
+          cp -r dist/* dist-repo/
+      
+      - name: Commit and push
+        run: |
+          cd dist-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy from ${{ github.repository }}@${{ github.sha }}" || exit 0
+          git push
