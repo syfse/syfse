@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: syfse/syfse-dist
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DIST_REPO_TOKEN }}
           path: dist-repo
       
       - name: Copy build files
