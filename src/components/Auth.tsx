@@ -23,6 +23,12 @@ export function Auth() {
         if (!username.trim()) {
           throw new Error('Username is required');
         }
+        if (username.length < 3) {
+          throw new Error('Username must be at least 3 characters long');
+        }
+        if (password.length < 6) {
+          throw new Error('Password must be at least 6 characters long');
+        }
         await signUp(email, password, username);
       }
     } catch (err) {
