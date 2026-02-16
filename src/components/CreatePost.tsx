@@ -4,6 +4,9 @@ import { Image as ImageIcon, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Button, Card, Input, Textarea, Select, Alert, Loading, BackButton } from './ui';
+import SpotlightCard from './SpotlightCard';
+import AnimatedContent from './AnimatedContent';
+import Magnet from './Magnet';
 import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'];
@@ -118,112 +121,169 @@ export function CreatePost() {
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-500 flex items-center gap-2">
+          <svg className="animate-spin h-5 w-5 text-green-500" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Loading...
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-3xl mx-auto">
-      <BackButton to="/" />
+      <AnimatedContent distance={30} duration={0.5}>
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      </AnimatedContent>
 
-      <Card className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Create a Post</h1>
+      <AnimatedContent distance={40} duration={0.6} delay={0.1}>
+        <SpotlightCard
+          className="!bg-white/90 backdrop-blur-sm !border-gray-200 !rounded-2xl"
+          spotlightColor="rgba(34, 197, 94, 0.1)"
+        >
+          <h1 className="text-2xl font-bold mb-6 text-gray-900">Create a Post</h1>
 
-        {communities.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              You need to join a community before you can create a post.
-            </p>
-            <Button onClick={() => navigate('/s')}>
-              Browse Communities
-            </Button>
-          </div>
-        ) : (
-          <>
-            {error && <Alert className="mb-4">{error}</Alert>}
+          {communities.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">
+                You need to join a community before you can create a post.
+              </p>
+              <Magnet padding={30} magnetStrength={3}>
+                <button
+                  onClick={onBack}
+                  className="green-700 text-white text-sm font-medium transition-all rounded-xl shadow-lg shadow-green-500/20"
+                >
+                  Browse Communities
+                </button>
+              </Magnet>
+            </div>
+          ) : (
+            <>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                  {error}
+                </div>
+              )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <Select
-                id="community"
-                label="Community"
-                value={selectedCommunity}
-                onChange={(e) => setSelectedCommunity(e.target.value)}
-                required
-              >
-                <option value="">Select a community</option>
-                {communities.map((community) => (
-                  <option key={community.id} value={community.id}>
-                    s/{community.name}
-                  </option>
-                ))}
-              </Select>
-
-              <Input
-                id="title"
-                label="Title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                maxLength={300}
-                placeholder="An interesting title"
-              />
-
-              <Textarea
-                id="content"
-                label="Content (optional)"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={10}
-                placeholder="What's on your mind?"
-              />
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Image (optional)</label>
-                {!imagePreview ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label htmlFor="community" className="block text-sm font-medium mb-2 text-gray-700">
+                    Community
                   </label>
-                ) : (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-auto max-h-96 object-contain border border-gray-200 dark:border-gray-800"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <select
+                    id="community"
+                    value={selectedCommunity}
+                    onChange={(e) => setSelectedCommunity(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    required
+                  >
+                    <option value="">Select a community</option>
+                    {communities.map((community) => (
+                      <option key={community.id} value={community.id}>
+                        s/{community.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" size="lg" disabled={submitting}>
-                  {submitting ? 'Posting...' : 'Post'}
-                </Button>
-                <Button type="button" variant="secondary" size="lg" onClick={() => navigate('/')}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </>
-        )}
-      </Card>
+                <div>
+                  <label htmlFor="title" className="block text-sm font-medium mb-2 text-gray-700">
+                    Title
+                  </label>
+                  <input
+                    id="title"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    required
+                    maxLength={300}
+                    placeholder="An interesting title"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="content" className="block text-sm font-medium mb-2 text-gray-700">
+                    Content (optional)
+                  </label>
+                  <textarea
+                    id="content"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={10}
+                    className="w-full px-4 py-3 border border-gray-200 bg-white text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"
+                    placeholder="What's on your mind?"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">Image (optional)</label>
+                  {!imagePreview ? (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-200 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-green-300 transition-all">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          <span className="font-semibold text-green-600">Click to upload</span> or drag and drop
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-auto max-h-96 object-contain rounded-xl border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Magnet padding={20} magnetStrength={4} disabled={submitting}>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold disabled:opacity-50 transition-all rounded-xl shadow-lg shadow-green-500/25"
+                    >
+                      {submitting ? 'Posting...' : 'Post'}
+                    </button>
+                  </Magnet>
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="px-6 py-3 border border-gray-200 font-medium hover:bg-gray-50 transition-all rounded-xl text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </SpotlightCard>
+      </AnimatedContent>
     </div>
   );
 }

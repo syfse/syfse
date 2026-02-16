@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PostsFeed } from './PostsFeed';
 import { Button, Card, Loading, BackButton } from './ui';
+import SpotlightCard from './SpotlightCard';
+import AnimatedContent from './AnimatedContent';
+import Magnet from './Magnet';
 import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
@@ -101,48 +104,84 @@ export function CommunityView() {
   };
 
   if (loading) {
-    return <Loading message="Loading community..." />;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-500 flex items-center gap-2">
+          <svg className="animate-spin h-5 w-5 text-green-500" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Loading community...
+        </div>
+      </div>
+    );
   }
 
   if (!community) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Community not found</p>
-        <BackButton to="/s" className="mt-4 inline-flex" />
+        <p className="text-gray-500">Community not found</p>
+        <button
+          onClick={onBack}
+          className="mt-4 text-green-600 hover:text-green-700 font-medium"
+        >
+          Go back
+        </button>
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <BackButton to="/s" />
+      <AnimatedContent distance={30} duration={0.5}>
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      </AnimatedContent>
 
-      <Card className="p-6 mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-6 h-6 text-green-600" />
-              <h1 className="text-2xl font-bold">s/{community.name}</h1>
+      <AnimatedContent distance={40} duration={0.6} delay={0.1}>
+        <SpotlightCard
+          className="!bg-white/90 backdrop-blur-sm !border-gray-200 !rounded-2xl mb-6"
+          spotlightColor="rgba(34, 197, 94, 0.1)"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">s/{community.name}</h1>
+              </div>
+              {community.description && (
+                <p className="text-gray-600 mb-3 ml-15">
+                  {community.description}
+                </p>
+              )}
+              <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit">
+                {community.member_count} {community.member_count === 1 ? 'member' : 'members'}
+              </div>
             </div>
-            {community.description && (
-              <p className="text-gray-600 dark:text-gray-400 mb-3">
-                {community.description}
-              </p>
+            {profile && (
+              <Magnet padding={30} magnetStrength={3}>
+                <button
+                  onClick={community.is_member ? handleLeave : handleJoin}
+                  className={`px-5 py-2.5 text-sm font-medium transition-all rounded-xl ${
+                    community.is_member
+                      ? 'border border-gray-200 hover:bg-gray-50 text-gray-700'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg shadow-green-500/20'
+                  }`}
+                >
+                  {community.is_member ? 'Leave' : 'Join'}
+                </button>
+              </Magnet>
             )}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {community.member_count} {community.member_count === 1 ? 'member' : 'members'}
-            </div>
           </div>
-          {profile && (
-            <Button
-              variant={community.is_member ? 'secondary' : 'primary'}
-              onClick={community.is_member ? handleLeave : handleJoin}
-            >
-              {community.is_member ? 'Leave' : 'Join'}
-            </Button>
-          )}
-        </div>
-      </Card>
+        </SpotlightCard>
+      </AnimatedContent>
 
       <PostsFeed communityId={community.id} />
     </div>

@@ -7,6 +7,8 @@ import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
 import { Card, Loading, EmptyState, BackButton } from './ui';
 import { formatTimeAgo, formatDate } from '../lib/utils';
+import SpotlightCard from './SpotlightCard';
+import AnimatedContent from './AnimatedContent';
 import type { Database } from '../lib/database.types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];

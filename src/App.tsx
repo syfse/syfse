@@ -9,6 +9,8 @@ import { PostView } from './components/PostView';
 import { CreatePost } from './components/CreatePost';
 import { UserProfile, PublicUserProfile } from './components/UserProfile';
 import { Loading } from './components/ui';
+import ShinyText from './components/ShinyText';
+import AnimatedContent from './components/AnimatedContent';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -30,12 +32,30 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function HomePage() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 tracking-tight">Home</h1>
-      <PostsFeed />
-    </div>
-  );
-}
+    <Layout currentView={getCurrentViewName()} onNavigate={handleNavigate}>
+      {view.type === 'home' && (
+        <div className="max-w-4xl mx-auto">
+          <AnimatedContent distance={30} duration={0.5}>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">Home</h1>
+              <p className="text-gray-500">Discover the latest from your communities</p>
+            </div>
+          </AnimatedContent>
+          <PostsFeed onSelectPost={(id) => setView({ type: 'post', id })} />
+        </div>
+      )}
+
+      {view.type === 'communities' && (
+        <CommunitiesList onSelectCommunity={(id) => setView({ type: 'community', id })} />
+      )}
+
+      {view.type === 'community' && (
+        <CommunityView
+          communityId={view.id}
+          onBack={() => setView({ type: 'communities' })}
+          onSelectPost={(id) => setView({ type: 'post', id })}
+        />
+      )}
 
 function App() {
   const { user, loading } = useAuth();
