@@ -324,6 +324,7 @@ export function PublicUserProfile() {
     const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts')
 
     const loadProfile = useCallback(async () => {
+        if (!username) return
         try {
             const { data: profileData, error: profileError } = await supabase
                 .from('profiles')

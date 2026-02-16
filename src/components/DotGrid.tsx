@@ -5,7 +5,7 @@ import { InertiaPlugin } from 'gsap/InertiaPlugin'
 
 gsap.registerPlugin(InertiaPlugin)
 
-const throttle = <T extends (...args: unknown[]) => void>(
+const throttle = <T extends (...args: any[]) => void>(
     func: T,
     limit: number
 ) => {
