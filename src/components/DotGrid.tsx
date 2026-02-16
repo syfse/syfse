@@ -5,16 +5,13 @@ import { InertiaPlugin } from 'gsap/InertiaPlugin'
 
 gsap.registerPlugin(InertiaPlugin)
 
-const throttle = <T extends (...args: any[]) => void>(
-    func: T,
-    limit: number
-) => {
+const throttle = (func: (e: MouseEvent) => void, limit: number) => {
     let lastCall = 0
-    return (...args: Parameters<T>) => {
+    return (e: MouseEvent) => {
         const now = performance.now()
         if (now - lastCall >= limit) {
             lastCall = now
-            func(...args)
+            func(e)
         }
     }
 }
