@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Users } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PostsFeed } from './PostsFeed';
+import { Button, Card, Loading, BackButton } from './ui';
 import SpotlightCard from './SpotlightCard';
 import AnimatedContent from './AnimatedContent';
 import Magnet from './Magnet';
@@ -13,27 +15,24 @@ type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
   is_member?: boolean;
 };
 
-interface CommunityViewProps {
-  communityId: string;
-  onBack: () => void;
-  onSelectPost: (id: string) => void;
-}
-
-export function CommunityView({ communityId, onBack, onSelectPost }: CommunityViewProps) {
+export function CommunityView() {
+  const { name } = useParams<{ name: string }>();
   const [community, setCommunity] = useState<SubSyfse | null>(null);
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
 
   useEffect(() => {
-    loadCommunity();
-  }, [communityId, profile]);
+    if (name) {
+      loadCommunity();
+    }
+  }, [name, profile]);
 
   const loadCommunity = async () => {
     try {
       const { data, error } = await supabase
         .from('sub_syfses')
         .select('*')
-        .eq('id', communityId)
+        .eq('name', name)
         .maybeSingle();
 
       if (error) throw error;
@@ -184,7 +183,7 @@ export function CommunityView({ communityId, onBack, onSelectPost }: CommunityVi
         </SpotlightCard>
       </AnimatedContent>
 
-      <PostsFeed communityId={communityId} onSelectPost={onSelectPost} />
+      <PostsFeed communityId={community.id} />
     </div>
   );
 }

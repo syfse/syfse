@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Card, Input, Textarea, Alert, Loading, EmptyState } from './ui';
 import SpotlightCard from './SpotlightCard';
 import AnimatedContent from './AnimatedContent';
 import Magnet from './Magnet';
@@ -12,11 +14,7 @@ type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'] & {
   is_member?: boolean;
 };
 
-interface CommunitiesListProps {
-  onSelectCommunity: (id: string) => void;
-}
-
-export function CommunitiesList({ onSelectCommunity }: CommunitiesListProps) {
+export function CommunitiesList() {
   const [communities, setCommunities] = useState<SubSyfse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);

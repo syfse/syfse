@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface AvatarProps {
   url: string | null;
@@ -9,7 +10,7 @@ interface AvatarProps {
   className?: string;
 }
 
-export function Avatar({ url, size = 10, username, className = '' }: AvatarProps) {
+export function Avatar({ url, size = 10, username, className }: AvatarProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,19 +39,14 @@ export function Avatar({ url, size = 10, username, className = '' }: AvatarProps
     }
   }
 
-  // Calculate dimensions based on size prop (tailwind w-X h-X)
-  // Since we can't easily map number to tailwind class dynamically without a huge map,
-  // we might accept pixel size or just use style.
-  // Ideally we use tailwind classes passed in className, but for default size we can use style.
-
-  const sizeStyle = { width: `${size * 0.25}rem`, height: `${size * 0.25}rem` }; // converting tailwind spacing unit roughly
+  const sizeStyle = { width: `${size * 0.25}rem`, height: `${size * 0.25}rem` };
 
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
         alt={username || 'Avatar'}
-        className={`rounded-full object-cover bg-gray-200 dark:bg-gray-800 ${className}`}
+        className={cn('object-cover bg-gray-200 dark:bg-gray-800', className)}
         style={className ? {} : sizeStyle}
       />
     );
@@ -58,7 +54,7 @@ export function Avatar({ url, size = 10, username, className = '' }: AvatarProps
 
   return (
     <div
-      className={`rounded-full bg-green-600 flex items-center justify-center text-white font-medium ${className}`}
+      className={cn('bg-green-600 flex items-center justify-center text-white font-medium', className)}
       style={className ? {} : sizeStyle}
     >
       {username ? (

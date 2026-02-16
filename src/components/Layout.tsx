@@ -1,17 +1,17 @@
 import { ReactNode } from 'react';
-import { Home, Users, Plus, LogOut, User } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Users, Plus, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar } from './Avatar';
+import { Button } from './ui';
 import DotGrid from './DotGrid';
 import Magnet from './Magnet';
 
 interface LayoutProps {
   children: ReactNode;
-  currentView: string;
-  onNavigate: (view: string) => void;
 }
 
-export function Layout({ children, currentView, onNavigate }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const { profile, signOut } = useAuth();
 
   return (

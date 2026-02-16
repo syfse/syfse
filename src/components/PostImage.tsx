@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { cn } from '../lib/utils';
 
 interface PostImageProps {
   url: string;
@@ -7,7 +8,7 @@ interface PostImageProps {
   className?: string;
 }
 
-export function PostImage({ url, alt, className = '' }: PostImageProps) {
+export function PostImage({ url, alt, className }: PostImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +41,7 @@ export function PostImage({ url, alt, className = '' }: PostImageProps) {
 
   if (loading) {
     return (
-      <div className={`bg-gray-100 dark:bg-gray-800 animate-pulse ${className}`} />
+      <div className={cn('bg-gray-100 dark:bg-gray-800 animate-pulse', className)} />
     );
   }
 

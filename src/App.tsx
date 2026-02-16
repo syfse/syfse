@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { Auth } from './components/Auth';
 import { Layout } from './components/Layout';
@@ -7,77 +7,30 @@ import { CommunityView } from './components/CommunityView';
 import { PostsFeed } from './components/PostsFeed';
 import { PostView } from './components/PostView';
 import { CreatePost } from './components/CreatePost';
-import { UserProfile } from './components/UserProfile';
+import { UserProfile, PublicUserProfile } from './components/UserProfile';
+import { Loading } from './components/ui';
 import ShinyText from './components/ShinyText';
 import AnimatedContent from './components/AnimatedContent';
 
-type View =
-  | { type: 'home' }
-  | { type: 'communities' }
-  | { type: 'community'; id: string }
-  | { type: 'post'; id: string }
-  | { type: 'create-post' }
-  | { type: 'profile' };
-
-function App() {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const [view, setView] = useState<View>({ type: 'home' });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 animate-pulse">
-            <span className="text-white font-bold text-2xl">S</span>
-          </div>
-          <ShinyText 
-            text="Loading..."
-            color="#9ca3af"
-            shineColor="#22c55e"
-            speed={2}
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <Loading message="Loading..." />
       </div>
     );
   }
 
   if (!user) {
-    return <Auth />;
+    return <Navigate to="/login" replace />;
   }
 
-  const handleNavigate = (target: string) => {
-    switch (target) {
-      case 'home':
-        setView({ type: 'home' });
-        break;
-      case 'communities':
-        setView({ type: 'communities' });
-        break;
-      case 'create-post':
-        setView({ type: 'create-post' });
-        break;
-      case 'profile':
-        setView({ type: 'profile' });
-        break;
-    }
-  };
+  return <Layout>{children}</Layout>;
+}
 
-  const getCurrentViewName = () => {
-    switch (view.type) {
-      case 'home':
-        return 'home';
-      case 'communities':
-      case 'community':
-        return 'communities';
-      case 'create-post':
-        return 'create-post';
-      case 'profile':
-        return 'profile';
-      default:
-        return 'home';
-    }
-  };
-
+function HomePage() {
   return (
     <Layout currentView={getCurrentViewName()} onNavigate={handleNavigate}>
       {view.type === 'home' && (
@@ -104,19 +57,35 @@ function App() {
         />
       )}
 
-      {view.type === 'post' && (
-        <PostView postId={view.id} onBack={() => setView({ type: 'home' })} />
-      )}
+function App() {
+  const { user, loading } = useAuth();
 
-      {view.type === 'create-post' && (
-        <CreatePost
-          onBack={() => setView({ type: 'home' })}
-          onSuccess={() => setView({ type: 'home' })}
-        />
-      )}
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <Loading message="Loading..." />
+      </div>
+    );
+  }
 
-      {view.type === 'profile' && <UserProfile />}
-    </Layout>
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth />} />
+      
+      <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      
+      <Route path="/s" element={<ProtectedRoute><CommunitiesList /></ProtectedRoute>} />
+      <Route path="/s/:name" element={<ProtectedRoute><CommunityView /></ProtectedRoute>} />
+      
+      <Route path="/post/:id" element={<ProtectedRoute><PostView /></ProtectedRoute>} />
+      
+      <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+      
+      <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+      <Route path="/u/:username" element={<ProtectedRoute><PublicUserProfile /></ProtectedRoute>} />
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

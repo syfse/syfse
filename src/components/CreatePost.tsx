@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Image as ImageIcon, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Card, Input, Textarea, Select, Alert, Loading, BackButton } from './ui';
 import SpotlightCard from './SpotlightCard';
 import AnimatedContent from './AnimatedContent';
 import Magnet from './Magnet';
@@ -9,12 +11,8 @@ import type { Database } from '../lib/database.types';
 
 type SubSyfse = Database['public']['Tables']['sub_syfses']['Row'];
 
-interface CreatePostProps {
-  onBack: () => void;
-  onSuccess: () => void;
-}
-
-export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
+export function CreatePost() {
+  const navigate = useNavigate();
   const [communities, setCommunities] = useState<SubSyfse[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [title, setTitle] = useState('');
@@ -98,7 +96,7 @@ export function CreatePost({ onBack, onSuccess }: CreatePostProps) {
 
       if (error) throw error;
 
-      onSuccess();
+      navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create post');
     } finally {

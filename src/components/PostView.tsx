@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, MessageSquare } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Clock, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
+import { Button, Card, Textarea, Loading, BackButton } from './ui';
+import { formatTimeAgo } from '../lib/utils';
 import SpotlightCard from './SpotlightCard';
 import AnimatedContent from './AnimatedContent';
 import Magnet from './Magnet';
@@ -19,12 +22,8 @@ type Comment = Database['public']['Tables']['comments']['Row'] & {
   replies?: Comment[];
 };
 
-interface PostViewProps {
-  postId: string;
-  onBack: () => void;
-}
-
-export function PostView({ postId, onBack }: PostViewProps) {
+export function PostView() {
+  const { id: postId } = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
@@ -36,8 +35,10 @@ export function PostView({ postId, onBack }: PostViewProps) {
   const { profile } = useAuth();
 
   useEffect(() => {
-    loadPost();
-    loadComments();
+    if (postId) {
+      loadPost();
+      loadComments();
+    }
   }, [postId]);
 
   const loadPost = async () => {
@@ -131,24 +132,13 @@ export function PostView({ postId, onBack }: PostViewProps) {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
-
   const renderComment = (comment: Comment, depth = 0) => (
-    <div key={comment.id} className={depth > 0 ? 'ml-6 mt-3' : 'mt-4'}>
       <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 hover:border-green-200 transition-all">
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
           <Avatar url={comment.author?.avatar_url || null} size={6} username={comment.author?.username} />
-          <span className="font-medium text-gray-700">u/{comment.author?.username || 'deleted'}</span>
+          <Link to={`/u/${comment.author?.username}`} className="font-medium hover:underline">
+            u/{comment.author?.username || 'deleted'}
+          </Link>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -166,7 +156,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
         )}
         {replyingTo === comment.id && (
           <form onSubmit={(e) => handleSubmitComment(e, comment.id)} className="mt-3">
-            <textarea
+            <Textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Write a reply..."
@@ -181,9 +171,11 @@ export function PostView({ postId, onBack }: PostViewProps) {
                 className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm font-medium disabled:opacity-50 transition-all rounded-lg shadow-md shadow-green-500/20"
               >
                 {submitting ? 'Posting...' : 'Reply'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   setReplyingTo(null);
                   setReplyText('');
@@ -191,11 +183,11 @@ export function PostView({ postId, onBack }: PostViewProps) {
                 className="px-4 py-2 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition-all rounded-lg text-gray-700"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
-      </div>
+      </Card>
       {comment.replies && comment.replies.map((reply) => renderComment(reply, depth + 1))}
     </div>
   );
@@ -298,7 +290,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
               spotlightColor="rgba(34, 197, 94, 0.1)"
             >
               <form onSubmit={(e) => handleSubmitComment(e)}>
-                <textarea
+                <Textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="What are your thoughts?"
@@ -322,7 +314,7 @@ export function PostView({ postId, onBack }: PostViewProps) {
                     className="px-5 py-2.5 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition-all rounded-xl text-gray-700"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             </SpotlightCard>

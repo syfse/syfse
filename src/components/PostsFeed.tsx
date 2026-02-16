@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Avatar } from './Avatar';
 import { PostImage } from './PostImage';
+import { Card, Loading, EmptyState } from './ui';
+import { formatTimeAgo } from '../lib/utils';
 import SpotlightCard from './SpotlightCard';
 import AnimatedContent from './AnimatedContent';
 import type { Database } from '../lib/database.types';
@@ -15,10 +18,9 @@ type Post = Database['public']['Tables']['posts']['Row'] & {
 
 interface PostsFeedProps {
   communityId?: string;
-  onSelectPost: (id: string) => void;
 }
 
-export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
+export function PostsFeed({ communityId }: PostsFeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,19 +69,11 @@ export function PostsFeed({ communityId, onSelectPost }: PostsFeedProps) {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
-
   if (loading) {
+    return <Loading message="Loading posts..." />;
+  }
+
+  if (posts.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-gray-500 flex items-center gap-2">

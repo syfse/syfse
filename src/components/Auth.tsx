@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Input, Card, Alert } from './ui';
 import { LogIn, UserPlus } from 'lucide-react';
 import DotGrid from './DotGrid';
 import AnimatedContent from './AnimatedContent';
