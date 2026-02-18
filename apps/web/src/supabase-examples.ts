@@ -39,14 +39,18 @@ export async function getCommunities() {
 // ============================================================================
 
 type Community = Tables<'communities'>
-type Profile = Tables<'profiles'>
-type ContentNode = Tables<'content_nodes'>
 
 export function processCommunity(community: Community) {
   // ✅ IntelliSense shows all properties
   const { id, name, slug, description, creator_id, created_at } = community
   return { id, name, slug, description, creator_id, created_at }
 }
+
+// Example types for other tables (use as needed)
+export type Profile = Tables<'profiles'>
+export type ContentNode = Tables<'content_nodes'>
+export type Vote = Tables<'votes'>
+export type CommunityMember = Tables<'community_members'>
 
 // ============================================================================
 // 3. Type-safe Inserts
@@ -104,7 +108,9 @@ export async function updateCommunityDescription(
 // ============================================================================
 
 type GlobalRole = Enums<'global_role'>
-type CommunityRole = Enums<'community_role'>
+
+// Export for use in other files
+export type CommunityRole = Enums<'community_role'>
 
 export function checkUserRole(role: GlobalRole) {
   // ✅ TypeScript ensures only valid enum values are used
