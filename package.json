@@ -10,7 +10,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cd apps/web && npm run dev",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "cd apps/web && npm run lint",
+    "typecheck": "cd apps/web && tsc -b",
+    "build": "cd apps/web && npm run build",
+    "preview": "cd apps/web && npm run preview",
+    "verify-types": "cd apps/web && npm run verify-types"
   },
   "keywords": [],
   "author": "",
