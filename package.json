@@ -11,7 +11,10 @@
     "dev": "cd apps/web && npm run dev",
     "format": "prettier --write .",
     "lint": "cd apps/web && npm run lint",
-    "typecheck": "cd apps/web && tsc -b"
+    "typecheck": "cd apps/web && tsc -b",
+    "build": "cd apps/web && npm run build",
+    "preview": "cd apps/web && npm run preview",
+    "verify-types": "cd apps/web && npm run verify-types"
   },
   "keywords": [],
   "author": "",
