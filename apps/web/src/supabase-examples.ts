@@ -39,8 +39,8 @@ export async function getCommunities() {
 // ============================================================================
 
 type Community = Tables<'communities'>
-type Profile = Tables<'profiles'>
-type ContentNode = Tables<'content_nodes'>
+// type Profile = Tables<'profiles'>
+// type ContentNode = Tables<'content_nodes'>
 
 export function processCommunity(community: Community) {
   // ✅ IntelliSense shows all properties
@@ -104,7 +104,7 @@ export async function updateCommunityDescription(
 // ============================================================================
 
 type GlobalRole = Enums<'global_role'>
-type CommunityRole = Enums<'community_role'>
+// type CommunityRole = Enums<'community_role'>
 
 export function checkUserRole(role: GlobalRole) {
   // ✅ TypeScript ensures only valid enum values are used
