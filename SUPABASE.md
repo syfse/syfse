@@ -10,6 +10,7 @@ This directory contains the Supabase client configuration and TypeScript type de
 ## Environment Setup
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
@@ -31,6 +32,7 @@ npx supabase status
 ```
 
 Then use:
+
 - URL: `http://127.0.0.1:54321`
 - Anon key: (from `supabase status` output)
 
@@ -58,12 +60,10 @@ The database includes the following tables:
 ### Basic Query
 
 ```typescript
-import { supabase } from './lib/supabase'
+import { supabase } from "./lib/supabase";
 
 // Fetch communities - with full type safety!
-const { data, error } = await supabase
-  .from('communities')
-  .select('*')
+const { data, error } = await supabase.from("communities").select("*");
 
 // data is typed as Tables<'communities'>[]
 ```
@@ -71,19 +71,19 @@ const { data, error } = await supabase
 ### Using Types
 
 ```typescript
-import type { Tables, TablesInsert } from './types/database.types'
+import type { Tables, TablesInsert } from "./types/database.types";
 
 // Get the type for a community row
-type Community = Tables<'communities'>
+type Community = Tables<"communities">;
 
 // Get the type for inserting a community
-type CommunityInsert = TablesInsert<'communities'>
+type CommunityInsert = TablesInsert<"communities">;
 
 const newCommunity: CommunityInsert = {
-  name: 'My Community',
-  slug: 'my-community',
-  description: 'A cool community'
-}
+  name: "My Community",
+  slug: "my-community",
+  description: "A cool community",
+};
 ```
 
 ### Type-safe Relationships
@@ -91,13 +91,15 @@ const newCommunity: CommunityInsert = {
 ```typescript
 // Fetch posts with author information
 const { data } = await supabase
-  .from('content_nodes')
-  .select(`
+  .from("content_nodes")
+  .select(
+    `
     *,
     author:profiles(*),
     community:communities(*)
-  `)
-  .is('parent_id', null) // Only top-level posts
+  `,
+  )
+  .is("parent_id", null); // Only top-level posts
 ```
 
 ## Type Generation
@@ -122,10 +124,11 @@ With these types, you get:
 ✅ **Autocomplete** for column names  
 ✅ **Type checking** for insert/update operations  
 ✅ **Autocomplete** for enum values  
-✅ **Type safety** for query results  
+✅ **Type safety** for query results
 
 Try it in your editor:
+
 ```typescript
-supabase.from('communities').select('...')
+supabase.from("communities").select("...");
 //             ↑ Autocomplete shows all table names
 ```
