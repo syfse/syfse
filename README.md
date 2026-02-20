@@ -15,6 +15,7 @@ A modern community-driven discussion platform built with React, TypeScript, and 
 ## 📋 Tech Stack
 
 ### Frontend
+
 - **React 19** - UI library
 - **TypeScript** - Type-safe development
 - **Vite** - Lightning-fast build tool
@@ -23,10 +24,12 @@ A modern community-driven discussion platform built with React, TypeScript, and 
 - **Lucide React** - Icon library
 
 ### Backend
+
 - **Supabase** - PostgreSQL database with built-in auth
 - **Row-Level Security (RLS)** - Database-level access control
 
 ### Tools & Configuration
+
 - **ESLint** - Code linting
 - **PostCSS** - CSS processing
 - **TypeScript** - Strict type checking
@@ -57,18 +60,21 @@ syfse/
 ## 🛠️ Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Supabase account and project
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/syfse.git
    cd syfse
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -83,21 +89,24 @@ syfse/
      ```
 
 4. **Run migrations** (if needed)
+
    ```bash
    cd supabase
    supabase db push
    ```
 
 5. **Start development server**
+
    ```bash
    npm run dev
    ```
-   
+
    The application will be available at `http://localhost:5173`
 
 ## 📚 Database Schema
 
 ### Tables
+
 - **profiles** - User profile information with roles
 - **communities** - Community metadata and settings
 - **community_members** - Community membership tracking
@@ -105,6 +114,7 @@ syfse/
 - **votes** - User votes on content (upvote/downvote)
 
 ### Key Relationships
+
 - `content_nodes.parent_id` - NULL for posts, references another node for replies
 - `content_nodes.community_id` - References the community where content was posted
 - `votes.node_id` - References the content being voted on
@@ -113,13 +123,17 @@ syfse/
 ## 🔐 Security
 
 ### Row-Level Security (RLS)
+
 The database uses RLS policies to ensure:
+
 - Users can only modify their own votes
 - Community members can only view members-only content
 - Users can only edit/delete their own posts and replies
 
 ### Required RLS Policies
+
 Ensure these policies are enabled on the `votes` table:
+
 - SELECT: All votes are readable
 - INSERT: Users can insert only their own votes
 - UPDATE: Users can update only their own votes
@@ -128,23 +142,31 @@ Ensure these policies are enabled on the `votes` table:
 ## 🎨 Key Components
 
 ### Vote Component
+
 Handles upvoting and downvoting on posts and replies
+
 - Props: `nodeId`, `initialVoteCount`, `horizontal`
 - Manages optimistic updates and vote state
 
 ### PostsFeed Component
+
 Displays paginated list of posts in a community
+
 - Props: `communityId` (optional)
 - Loads posts with reply counts and vote totals
 
 ### PostView Component
+
 Detailed view of a single post with threaded replies
+
 - Supports nested replies with indentation
 - Real-time voting on individual replies
 - Reply form with submission handling
 
 ### UserProfile Component
+
 Shows user's published posts and replies
+
 - Displays user stats and content history
 - Vote counts and reply metrics
 
@@ -188,25 +210,31 @@ supabase db push
 ## 📖 API Documentation
 
 ### Vote System
+
 - **Upvote**: `vote_value = 1`
 - **Downvote**: `vote_value = -1`
 - **No Vote**: Delete the vote record
 - Vote count is calculated as the sum of all `vote_value` entries
 
 ### Content Hierarchy
+
 - **Posts**: `parent_id = null`
 - **Replies**: `parent_id` references the parent post or reply
 
 ## 🐛 Troubleshooting
 
 ### RLS Policy Errors
+
 If you see "new row violates row-level security policy", ensure:
+
 1. RLS is enabled on the affected table
 2. The correct policies are in place for your user role
 3. Your user is authenticated via Supabase Auth
 
 ### Vote Updates Not Working
+
 Check:
+
 1. Supabase connection is active
 2. User is logged in (`useAuth()` hook shows user data)
 3. Browser console for detailed error messages
