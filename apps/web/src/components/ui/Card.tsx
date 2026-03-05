@@ -1,4 +1,5 @@
-import type React from "react";
+import React from "react";
+import { Button } from "./Button";
 
 interface CardProps {
     children: React.ReactNode;
@@ -6,11 +7,12 @@ interface CardProps {
     buttonConfig?: {
         useDefault?: boolean; // Use Default buttons (exit, submit)
         alignment?: "left" | "center" | "right";
-        customClasses?: string;
+        customButtons?: React.ReactNode[]; // Custom buttons if useDefault is false
+        customClasses?: string; // Custom classes for button container
     }
 }
 
-export function Card({ children, classes, buttonConfig }: CardProps) {
+export function Card({ children, classes, buttonConfig = { useDefault: true, alignment: "right" } }: CardProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className={`rounded-lg bg-gray-50 px-16 py-14 ${classes || ""}`}>
@@ -27,14 +29,14 @@ export function Card({ children, classes, buttonConfig }: CardProps) {
           >
             {buttonConfig.useDefault ? (
               <>
-                <button className="mr-4 rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400">
-                  Exit
-                </button>
-                <button className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
-                  Submit
-                </button>
+                <Button classes="mr-4 bg-gray-300 text-gray-700 hover:bg-gray-400">Exit</Button>
+                <Button>Submit</Button>
               </>
-            ) : null}
+            ) : (
+              buttonConfig.customButtons && buttonConfig.customButtons.map((button, index) => (
+                <React.Fragment key={index}>{button}</React.Fragment>
+              ))
+            )}
           </div>
         )}
       </div>
