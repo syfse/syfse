@@ -6,7 +6,6 @@ import { Button } from "../components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import type { AuthError } from "@supabase/supabase-js";
 import { useNotification } from "../contexts/NotificationContext";
-import { div } from "motion/react-client";
 
 export function RegisterView() {
   const { signUp } = useAuth();

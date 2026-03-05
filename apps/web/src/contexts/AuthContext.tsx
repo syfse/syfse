@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       console.error("Failed to fetch user profile:", error.message);
     }
-    console.log(data)
+    console.log(data);
     setProfile(data ?? null);
   }, []);
 
