@@ -9,14 +9,19 @@ interface CardProps {
         alignment?: "left" | "center" | "right";
         customButtons?: React.ReactNode[]; // Custom buttons if useDefault is false
         customClasses?: string; // Custom classes for button container
-    }
+    },
+    footer?: React.ReactNode;
 }
 
-export function Card({ children, classes, buttonConfig = { useDefault: true, alignment: "right" } }: CardProps) {
+export function Card({ children, classes, buttonConfig = { useDefault: true, alignment: "right" }, footer }: CardProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className={`rounded-lg bg-gray-50 px-16 py-14 ${classes || ""}`}>
+        {/* Content Section */}
         <div>{children}</div>
+
+        {/* Button Section */}
+
         {buttonConfig && (
           <div
             className={`mt-6 flex ${
@@ -39,6 +44,9 @@ export function Card({ children, classes, buttonConfig = { useDefault: true, ali
             )}
           </div>
         )}
+
+        {/* Footer Section */}
+        {footer && <div className="mt-6">{footer}</div>}
       </div>
     </div>
   );
