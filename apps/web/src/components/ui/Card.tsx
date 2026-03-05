@@ -15,7 +15,7 @@ interface CardProps {
 
 export function Card({ children, classes, buttonConfig = { useDefault: true, alignment: "right" }, footer }: CardProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex items-center">
       <div className={`rounded-lg bg-gray-50 px-16 py-14 ${classes || ""}`}>
         {/* Content Section */}
         <div>{children}</div>

@@ -11,22 +11,22 @@ export function Header() {
     return (
         <header className="w-full rounded shadow-lg dark:bg-gray-800">
             <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                <Link to="/" className="text-2xl font-bold tracking-wider hover:opacity-90 transition duration-300 ease-in-out dark:text-white">
+                <Link to="/" className="text-2xl font-bold tracking-wider hover:text-gray-500 transition duration-300 ease-in-out dark:text-white">
                     SYFSE
                 </Link>
                 
                 <nav className="hidden md:flex items-center gap-6">
                     {user ? (
-                        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
-                            <User className="w-5 h-5 text-white" />
-                            <span className="text-white font-medium">{profile?.username}</span>
-                            <button onClick={logout} className="text-white hover:text-red-200 transition">
-                                <LogOut className="w-5 h-5" />
+                        <div className="flex items-center gap-2 bg-gray-700/10 rounded-lg px-4 py-2 text-sm dark:bg-gray-700/50">
+                            <User className="w-5 h-5 dark:text-white" />
+                            <span className="font-medium dark:text-white">{profile?.username}</span>
+                            <button onClick={logout} className="hover:text-gray-500 dark:hover:text-red-400 dark:text-white transition">
+                                <LogOut className="w-5 h-5 dark:text-white" />
                             </button>
                         </div>
                     ) : (
                         <Link to="/login">
-                            <Button classes="bg-white text-blue-600 font-semibold hover:bg-gray-100">
+                            <Button classes="font-semibold">
                                 Login
                             </Button>
                         </Link>
@@ -52,7 +52,7 @@ export function Header() {
                         </>
                     ) : (
                         <Link to="/login" className="w-full">
-                            <Button classes="w-full bg-white text-blue-600">Login</Button>
+                            <Button classes="w-full">Login</Button>
                         </Link>
                     )}
                 </div>

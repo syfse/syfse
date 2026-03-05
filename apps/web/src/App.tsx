@@ -19,7 +19,7 @@ function App() {
   }, [user, navigate]);
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <NotificationCenter />
       <Routes>
         <Route path="/" element={<HomeView />} />
@@ -28,7 +28,7 @@ function App() {
 
         {/* Add more routes here */}
       </Routes>
-    </>
+    </div>
   );
 }
 
