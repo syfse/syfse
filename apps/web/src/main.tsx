@@ -3,11 +3,17 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
+import { NotificationProvider } from "./contexts/NotificationContext.tsx";
+import { BrowserRouter } from "react-router-dom";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <BrowserRouter>
+      <NotificationProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </NotificationProvider>
+    </BrowserRouter>
   </StrictMode>,
 );

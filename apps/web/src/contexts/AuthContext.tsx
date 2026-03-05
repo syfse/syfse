@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { Session, User, AuthError } from "@supabase/supabase-js";
+import { type Session, type User, AuthError } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { Tables } from "../types/database.types";
 
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       console.error("Failed to fetch user profile:", error.message);
     }
+    console.log(data);
     setProfile(data ?? null);
   }, []);
 
@@ -87,15 +88,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
+    if (!email || !password) {
+      const error = new AuthError("Email and password are required");
+      return { error };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     return { error };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
+    console.log("Attempting to sign up with email:", email);
+    if (!email || !password) {
+      const error = new AuthError("Email and password are required");
+      return { error };
+    }
+
     const { error } = await supabase.auth.signUp({ email, password });
+
     return { error };
   }, []);
 
@@ -128,4 +142,3 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
-
